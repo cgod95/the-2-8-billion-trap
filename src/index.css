@@ -1,0 +1,217 @@
+@import "tailwindcss";
+
+/* Class-based dark variant, toggled on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  "The £2.8 Billion Trap" design tokens.
+
+  Restrained, data-forward, editorial — the register of ONS / the FT / Our World
+  in Data, not a campaign site. One warm paper, one ink, one accent (a serious
+  rust), plus a small semantic palette: four source tiers (so the reader can tell
+  official statistics from advocacy analysis at a glance) and the two-line
+  spend-vs-subsidy data colours that carry the central chart.
+
+  Dark mode overrides the same tokens (see `.dark`), so every component flips
+  automatically — no `dark:` utilities sprinkled through the components.
+*/
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: "Source Serif 4", ui-serif, Georgia, "Times New Roman", serif;
+
+  /* Surfaces & ink — warm paper, distinct from the sister piece's cooler ground. */
+  --color-paper: #faf7f2;
+  --color-surface: #fffdfa;
+  --color-ink: #1c1a17;
+  --color-ink-soft: #46423b;
+  --color-muted: #78736a;
+  --color-faint: #9b958a;
+  --color-line: #e8e1d5;
+  --color-line-strong: #d8cfbf;
+
+  /* Inverted surface — for the always-dark banner & footer (does not flip). */
+  --color-surface-invert: #1c1a17;
+  --color-on-invert: #faf7f2;
+
+  /* Single brand accent — a serious rust. Also the "rising real cost" data line. */
+  --color-accent: #b4471f;
+  --color-accent-ink: #8c3514;
+  --color-accent-soft: #f6ebe4;
+
+  /* Central-chart data colours */
+  --color-spend: #b4471f;     /* what councils actually spend — rises */
+  --color-reclaim: #4f6470;   /* the reclaimable, frozen-pegged subsidy — near flat */
+  --color-forecast: #9b958a;  /* projected / forecast segments — dashed, muted */
+
+  /* Source-tier palette — kept cool so it never competes with the rust accent. */
+  --color-tier-official: #33506b;   /* slate  — official statistics / impartial parliamentary research */
+  --color-tier-parliament: #6d28d9; /* violet — Hansard, a named member on the record */
+  --color-tier-analysis: #0f766e;   /* teal   — independent research / think-tank analysis */
+  --color-tier-advocacy: #a86a1c;   /* ochre  — sector & campaign bodies with a stated position */
+}
+
+/*
+  Dark theme. Unlayered (so it cascades over the `:root` theme vars) and applied
+  by adding `.dark` to <html>. Tuned for contrast on a warm dark ground rather
+  than a naive inversion.
+*/
+.dark {
+  --color-paper: #14130f;
+  --color-surface: #1d1b15;
+  --color-ink: #efeae0;
+  --color-ink-soft: #c9c3b6;
+  --color-muted: #938d80;
+  --color-faint: #7c7669;
+  --color-line: #2c2a22;
+  --color-line-strong: #3c392f;
+
+  --color-surface-invert: #0d0c09;
+  --color-on-invert: #efeae0;
+
+  --color-accent: #e08a5f;
+  --color-accent-ink: #f0b393;
+  --color-accent-soft: #2a1c14;
+
+  --color-spend: #e08a5f;
+  --color-reclaim: #8aa3b0;
+  --color-forecast: #8a847a;
+
+  --color-tier-official: #8fa6c2;
+  --color-tier-parliament: #b09bf0;
+  --color-tier-analysis: #4fb8ab;
+  --color-tier-advocacy: #d4a657;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv05" 1, "ss01" 1;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Tabular, lining figures everywhere numbers need to line up. */
+  .tnum {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+  }
+
+  /* Honour reduced-motion for smooth-scroll, reveals and chart draw-ins. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  }
+}
+
+@layer components {
+  /* Editorial display type — optical sizing makes Source Serif sing at large sizes. */
+  .font-display {
+    font-family: var(--font-serif);
+    font-optical-sizing: auto;
+    font-feature-settings: "liga" 1, "calt" 1;
+    letter-spacing: -0.014em;
+  }
+
+  /* Offset for anchored jumps so the sticky progress rail never covers a heading. */
+  .anchor-offset {
+    scroll-margin-top: 4.5rem;
+  }
+
+  /* SVG label halo — keeps in-chart annotations legible where they cross lines or
+     shaded areas (Datawrapper: "add a text outline when text overlaps data").
+     Uses the surface token, so it blends into the card in light and dark. */
+  .chart-halo {
+    paint-order: stroke;
+    stroke: var(--color-surface);
+    stroke-width: 3.5px;
+    stroke-linejoin: round;
+  }
+  /* The hero motif sits on the paper ground, not a card. */
+  .chart-halo-paper {
+    paint-order: stroke;
+    stroke: var(--color-paper);
+    stroke-width: 3.5px;
+    stroke-linejoin: round;
+  }
+
+  /* Scroll-reveal: hidden until the IntersectionObserver adds .is-visible.
+     Falls back to fully visible when motion is reduced. */
+  .reveal {
+    will-change: opacity, transform;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition:
+        opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+        transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+    .reveal.is-visible {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Chart line-draw: strokes draw themselves in when the chart enters view.
+     Static (instantly drawn) when motion is reduced. The pathLength="1"
+     attribute on each path normalises dasharray maths to 0..1. */
+  .draw-line {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .is-drawn .draw-line {
+      transition: stroke-dashoffset 1.6s cubic-bezier(0.4, 0, 0.2, 1);
+      stroke-dashoffset: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .draw-line {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Chart area/fill + grid-cell reveal: fade up when the chart enters view. */
+  .grow-in {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .is-drawn .grow-in {
+      transition: opacity 0.7s ease, transform 0.7s ease;
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .grow-in {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
